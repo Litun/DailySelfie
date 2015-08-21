@@ -16,11 +16,13 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.ViewHolder
     private List<Selfie> data;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public ImageView imageView;
+        ImageView imageView;
+        TextView textView;
 
         public ViewHolder(View v) {
             super(v);
             imageView = (ImageView) v.findViewById(R.id.small_selfie);
+            textView = (TextView) v.findViewById(R.id.selfie_text);
         }
     }
 
@@ -43,7 +45,9 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.ViewHolder
     public void onBindViewHolder(ViewHolder holder, int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-        holder.imageView.setImageBitmap(data.get(position).selfie);
+        Selfie selfie = data.get(position);
+        holder.imageView.setImageBitmap(selfie.getThumbnail());
+        holder.textView.setText(selfie.getName());
     }
 
     // Return the size of your dataset (invoked by the layout manager)
