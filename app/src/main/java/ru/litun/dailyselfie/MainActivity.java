@@ -1,9 +1,13 @@
 package ru.litun.dailyselfie;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
@@ -11,6 +15,7 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +42,16 @@ public class MainActivity extends AppCompatActivity {
         //recycler
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler);
         adapter = new SelfieAdapter(selfies);
+        adapter.setListener(new SelfieAdapter.OnClick() {
+            @Override
+            public void itemClicked(View view, int position) {
+                Intent intent = new Intent(MainActivity.this, PictureActivity.class);
+                intent.putExtra(PictureActivity.PATH_KEY, selfies.get(position).getPhotoPath());
+                ActivityOptionsCompat options = ActivityOptionsCompat.
+                        makeSceneTransitionAnimation(MainActivity.this, view, "picture");
+                startActivity(intent, options.toBundle());
+            }
+        });
         RecyclerView.LayoutManager layoutManager =
                 new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
