@@ -1,13 +1,14 @@
 package ru.litun.dailyselfie;
 
-import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
-import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
@@ -19,6 +20,7 @@ import android.view.View;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -27,8 +29,13 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
+    //    public static final String PREF_KEY = "main_prefs";
+//    public static final String SELFIES_JSON_KEY = "selfies_json";
     private List<Selfie> selfies = new ArrayList<>();
     private SelfieAdapter adapter;
+
+    private SelfieDatabaseHelper selfieDatabaseHelper;
+    private SQLiteDatabase sqLiteDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +45,11 @@ public class MainActivity extends AppCompatActivity {
         //toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        //database
+        selfieDatabaseHelper = new SelfieDatabaseHelper(this);
+        sqLiteDatabase = selfieDatabaseHelper.getWritableDatabase();
+        loadFromDatabase();
 
         //recycler
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler);
@@ -56,6 +68,23 @@ public class MainActivity extends AppCompatActivity {
                 new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
+    }
+
+    private void loadFromDatabase() {
+        Cursor cursor = sqLiteDatabase.query(SelfieDatabaseHelper.DATABASE_TABLE,
+                new String[]{SelfieDatabaseHelper.NAME_COLUMN,
+                        SelfieDatabaseHelper.PHOTO_PATH_COLUMN},
+                null, null,
+                null, null, null);
+
+        //cursor.moveToFirst();
+        while (cursor.moveToNext()) {
+            String name = cursor.getString(cursor.getColumnIndex(SelfieDatabaseHelper.NAME_COLUMN));
+            String path = cursor.getString(cursor.getColumnIndex(SelfieDatabaseHelper.PHOTO_PATH_COLUMN));
+            Selfie selfie = new Selfie(path, name);
+            selfies.add(selfie);
+        }
+        cursor.close();
     }
 
     @Override
@@ -90,7 +119,12 @@ public class MainActivity extends AppCompatActivity {
             selfie.setName(timeStamp);
             selfies.add(selfie);
             adapter.notifyItemInserted(selfies.size());
-            //mImageView.setImageBitmap(imageBitmap);
+
+            //add to database
+            ContentValues newValues = new ContentValues();
+            newValues.put(SelfieDatabaseHelper.NAME_COLUMN, selfie.getName());
+            newValues.put(SelfieDatabaseHelper.PHOTO_PATH_COLUMN, selfie.getPhotoPath());
+            sqLiteDatabase.insert(SelfieDatabaseHelper.DATABASE_TABLE, null, newValues);
         }
     }
 
@@ -128,29 +162,5 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
         }
-    }
-
-    private void setPic() {
-//        // Get the dimensions of the View
-//        int targetW = mImageView.getWidth();
-//        int targetH = mImageView.getHeight();
-//
-//        // Get the dimensions of the bitmap
-//        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-//        bmOptions.inJustDecodeBounds = true;
-//        BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
-//        int photoW = bmOptions.outWidth;
-//        int photoH = bmOptions.outHeight;
-//
-//        // Determine how much to scale down the image
-//        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
-//
-//        // Decode the image file into a Bitmap sized to fill the View
-//        bmOptions.inJustDecodeBounds = false;
-//        bmOptions.inSampleSize = scaleFactor;
-//        bmOptions.inPurgeable = true;
-//
-//        Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
-//        mImageView.setImageBitmap(bitmap);
     }
 }

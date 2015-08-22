@@ -3,17 +3,16 @@ package ru.litun.dailyselfie;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
-import android.provider.MediaStore;
-import android.widget.ImageView;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /**
  * Created by Litun on 21.08.2015.
  */
-public class Selfie {
+public class Selfie implements Parcelable {
 
     private String name;
     private String photoPath;
-    private Bitmap bitmap;
     private Bitmap thumbnail;
 
     public Selfie(String photoPath) {
@@ -21,15 +20,37 @@ public class Selfie {
         setThumbnail();
     }
 
+    public Selfie(String photoPath, String name) {
+        this.photoPath = photoPath;
+        this.name = name;
+        setThumbnail();
+    }
+
+    protected Selfie(Parcel in) {
+        name = in.readString();
+        photoPath = in.readString();
+        setThumbnail();
+    }
+
+    public static final Creator<Selfie> CREATOR = new Creator<Selfie>() {
+        @Override
+        public Selfie createFromParcel(Parcel in) {
+            return new Selfie(in);
+        }
+
+        @Override
+        public Selfie[] newArray(int size) {
+            return new Selfie[size];
+        }
+    };
+
     public String getPhotoPath() {
         return photoPath;
     }
 
-    public Bitmap getBitmap() {
-        return bitmap;
-    }
-
     public Bitmap getThumbnail() {
+        if (thumbnail == null)
+            setThumbnail();
         return thumbnail;
     }
 
@@ -55,5 +76,16 @@ public class Selfie {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(name);
+        dest.writeString(photoPath);
     }
 }
